@@ -1,0 +1,13 @@
+# Target Architecture Architecture
+TARGET_ARCH := arm64
+TARGET_ARCH_VARIANT := armv8-a
+TARGET_CPU_ABI := arm64-v8a
+TARGET_BOARD_PLATFORM := mt8766
+
+# Compile Parameters
+BOARD_FLASH_BLOCK_SIZE := 131072
+BOARD_BOOTIMAGE_PARTITION_SIZE := 33554432
+BOARD_SYSTEMIMAGE_PARTITION_SIZE := 2147483648
+
+# Link to prebuilt kernel object binary
+TARGET_PREBUILT_KERNEL := kernel/acer/T482L/kernel
