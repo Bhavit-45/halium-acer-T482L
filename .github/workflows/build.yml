@@ -86,6 +86,13 @@ jobs:
         fix("external/e2fsprogs/misc/Android.bp", "tune2fs_recovery")
         '
 
+    - name: Bypass Missing Soong Variables
+      run: |
+        cd halium
+        echo "=== Cleaning up unmapped PATH_OVERRIDE_SOONG flags ==="
+        # This scans the whole project and safely strips out the ghost variable causing the crash
+        find . -name "Android.bp" -type f -exec sed -i 's/\$(PATH_OVERRIDE_SOONG)//g' {} +
+
     - name: Compile System Images
       run: |
         cd halium
