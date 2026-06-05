@@ -1,0 +1,2 @@
+PRODUCT_MAKEFILES := $(LOCAL_DIR)/halium_T482L.mk
+COMMON_LUNCH_CHOICES := halium_T482L-userdebug
