@@ -86,12 +86,14 @@ jobs:
         fix("external/e2fsprogs/misc/Android.bp", "tune2fs_recovery")
         '
 
-    - name: Bypass Missing Soong Variables
+    - name: Bypass Missing Soong Variables (Copilot Enhanced)
       run: |
         cd halium
         echo "=== Cleaning up unmapped PATH_OVERRIDE_SOONG flags ==="
-        # This scans the whole project and safely strips out the ghost variable causing the crash
         find . -name "Android.bp" -type f -exec sed -i 's/\$(PATH_OVERRIDE_SOONG)//g' {} +
+        
+        echo "=== Applying Copilot Fix: Substituting KERNEL_MAKE_CMD with make ==="
+        find . -name "Android.bp" -type f -exec sed -i 's/\$(KERNEL_MAKE_CMD)/make/g' {} +
 
     - name: Compile System Images
       run: |
@@ -112,3 +114,4 @@ jobs:
       with:
         name: Finished-Acer-System-Image
         path: halium/out/target/product/T482L/system.img
+        
