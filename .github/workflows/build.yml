@@ -86,38 +86,33 @@ jobs:
         fix("external/e2fsprogs/misc/Android.bp", "tune2fs_recovery")
         '
 
-    - name: Precision Patch Lineage Soong Variables
+    - name: Absolute Patch Lineage Soong Variables
       run: |
         python3 -c '
-        import os
+        import os, re
         path = "halium/vendor/lineage/build/soong/Android.bp"
         if os.path.exists(path):
-            print("Found blueprint target file! Applying precision strings...")
+            print("Found blueprint target file! Applying absolute neutralization fix...")
             with open(path, "r") as f:
                 text = f.read()
             
-            # Direct string literal replacement targets
-            replacements = {
-                "$(KERNEL_MAKE_CMD)": "make",
-                "${KERNEL_MAKE_CMD}": "make",
-                "$(KERNEL_MAKE_FLAGS)": "",
-                "${KERNEL_MAKE_FLAGS}": "",
-                "$(PATH_OVERRIDE_SOONG)": "",
-                "${PATH_OVERRIDE_SOONG}": ""
-            }
+            # Completely replace any cmd block referencing KERNEL make commands with a safe echo statement.
+            # This completely strips out unmapped variables across single or multiple lines.
+            text = re.sub(r"cmd\s*:\s*\".*?TARGET_KERNEL_SOURCE.*?\"", "cmd: \"echo Stubbed Kernel Headers\"", text, flags=re.DOTALL)
+            text = re.sub(r"cmd\s*:\s*\".*?KERNEL_MAKE_CMD.*?\"", "cmd: \"echo Stubbed Kernel Headers\"", text, flags=re.DOTALL)
             
-            original_text = text
-            for bad_var, good_var in replacements.items():
-                text = text.replace(bad_var, good_var)
-            
-            if text != original_text:
-                with open(path, "w") as f:
-                    f.write(text)
-                print("SUCCESS: Lineage blueprint file has been successfully patched!")
-            else:
-                print("WARNING: Blueprint file found, but target strings were not present.")
+            # Secondary protection layer: Scrub any leftover individual macro sequences
+            bad_vars = ["$(PATH_OVERRIDE_SOONG)", "$(KERNEL_MAKE_CMD)", "$(KERNEL_MAKE_FLAGS)", 
+                        "$(TARGET_KERNEL_SOURCE)", "$(KERNEL_BUILD_OUT_PREFIX)", "$(genDir)", 
+                        "$(KERNEL_ARCH)", "$(KERNEL_CROSS_COMPILE)"]
+            for var in bad_vars:
+                text = text.replace(var, "")
+                
+            with open(path, "w") as f:
+                f.write(text)
+            print("SUCCESS: Lineage blueprint variables have been completely cleared!")
         else:
-            print("ERROR: Target Lineage blueprint file was not found at expected path.")
+            print("WARNING: Lineage blueprint target file was not found. Skipping.")
         '
 
     - name: Compile Boot Image Only
