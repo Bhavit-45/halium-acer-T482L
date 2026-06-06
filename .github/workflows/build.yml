@@ -95,23 +95,18 @@ jobs:
         echo "=== Applying Copilot Fix: Substituting KERNEL_MAKE_CMD with make ==="
         find . -name "Android.bp" -type f -exec sed -i 's/\$(KERNEL_MAKE_CMD)/make/g' {} +
 
-    - name: Compile System Images
+    - name: Compile Boot Image Only
       run: |
         cd halium
         source build/envsetup.sh
         lunch halium_T482L-userdebug
         export USE_HOST_LEX=yes
-        mka hybris-boot systemimage
+        # Only building hybris-boot target here!
+        mka hybris-boot
 
     - name: Upload Finished Boot Image File
       uses: actions/upload-artifact@v4
       with:
         name: Finished-Acer-Boot-Image
         path: halium/out/target/product/T482L/hybris-boot.img
-
-    - name: Upload Finished System Image File
-      uses: actions/upload-artifact@v4
-      with:
-        name: Finished-Acer-System-Image
-        path: halium/out/target/product/T482L/system.img
         
