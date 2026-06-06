@@ -43,13 +43,6 @@ jobs:
         repo init -u https://github.com/Halium/android -b halium-10.0 --depth=1
         repo sync -c -j8 --no-clone-bundle --no-tags
 
-    - name: Remove Compatibility Test Suites (CTS)
-      run: |
-        echo "=== Dropping unneeded test trees to prevent dependency panics ==="
-        # Stripping out the test directories completely fixes the ckati 99% validation wall
-        rm -rf halium/cts
-        rm -rf halium/test/vts
-
     - name: Inject Custom Acer Configuration
       run: |
         # Create the exact folder structure Halium expects
@@ -118,6 +111,16 @@ jobs:
                 f.write(text)
             print("SUCCESS: Lineage blueprint variables have been completely cleared!")
         '
+
+    - name: Neutralize CTS and VTS Build Blueprints
+      run: |
+        echo "=== Silently deleting build makefiles inside test suites ==="
+        # We leave the directories intact for the patch script, but erase the build rules
+        # so the main compilation engine skips over their dependencies entirely!
+        find halium/cts -name "Android.mk" -delete 2>/dev/null || true
+        find halium/cts -name "Android.bp" -delete 2>/dev/null || true
+        find halium/test/vts -name "Android.mk" -delete 2>/dev/null || true
+        find halium/test/vts -name "Android.bp" -delete 2>/dev/null || true
 
     - name: Compile Boot Image Only
       run: |
