@@ -43,6 +43,13 @@ jobs:
         repo init -u https://github.com/Halium/android -b halium-10.0 --depth=1
         repo sync -c -j8 --no-clone-bundle --no-tags
 
+    - name: Remove Compatibility Test Suites (CTS)
+      run: |
+        echo "=== Dropping unneeded test trees to prevent dependency panics ==="
+        # Stripping out the test directories completely fixes the ckati 99% validation wall
+        rm -rf halium/cts
+        rm -rf halium/test/vts
+
     - name: Inject Custom Acer Configuration
       run: |
         # Create the exact folder structure Halium expects
@@ -86,7 +93,7 @@ jobs:
         fix("external/e2fsprogs/misc/Android.bp", "tune2fs_recovery")
         '
 
-    - name: Absolute Patch Lineage Soong Variables
+    - name: Precision Patch Lineage Soong Variables
       run: |
         python3 -c '
         import os, re
@@ -97,7 +104,6 @@ jobs:
                 text = f.read()
             
             # Completely replace any cmd block referencing KERNEL make commands with a safe echo statement.
-            # This completely strips out unmapped variables across single or multiple lines.
             text = re.sub(r"cmd\s*:\s*\".*?TARGET_KERNEL_SOURCE.*?\"", "cmd: \"echo Stubbed Kernel Headers\"", text, flags=re.DOTALL)
             text = re.sub(r"cmd\s*:\s*\".*?KERNEL_MAKE_CMD.*?\"", "cmd: \"echo Stubbed Kernel Headers\"", text, flags=re.DOTALL)
             
@@ -111,8 +117,6 @@ jobs:
             with open(path, "w") as f:
                 f.write(text)
             print("SUCCESS: Lineage blueprint variables have been completely cleared!")
-        else:
-            print("WARNING: Lineage blueprint target file was not found. Skipping.")
         '
 
     - name: Compile Boot Image Only
