@@ -86,14 +86,39 @@ jobs:
         fix("external/e2fsprogs/misc/Android.bp", "tune2fs_recovery")
         '
 
-    - name: Bypass Missing Soong Variables (Copilot Enhanced)
+    - name: Precision Patch Lineage Soong Variables
       run: |
-        cd halium
-        echo "=== Cleaning up unmapped PATH_OVERRIDE_SOONG flags ==="
-        find . -name "Android.bp" -type f -exec sed -i 's/\$(PATH_OVERRIDE_SOONG)//g' {} +
-        
-        echo "=== Applying Copilot Fix: Substituting KERNEL_MAKE_CMD with make ==="
-        find . -name "Android.bp" -type f -exec sed -i 's/\$(KERNEL_MAKE_CMD)/make/g' {} +
+        python3 -c '
+        import os
+        path = "halium/vendor/lineage/build/soong/Android.bp"
+        if os.path.exists(path):
+            print("Found blueprint target file! Applying precision strings...")
+            with open(path, "r") as f:
+                text = f.read()
+            
+            # Direct string literal replacement targets
+            replacements = {
+                "$(KERNEL_MAKE_CMD)": "make",
+                "${KERNEL_MAKE_CMD}": "make",
+                "$(KERNEL_MAKE_FLAGS)": "",
+                "${KERNEL_MAKE_FLAGS}": "",
+                "$(PATH_OVERRIDE_SOONG)": "",
+                "${PATH_OVERRIDE_SOONG}": ""
+            }
+            
+            original_text = text
+            for bad_var, good_var in replacements.items():
+                text = text.replace(bad_var, good_var)
+            
+            if text != original_text:
+                with open(path, "w") as f:
+                    f.write(text)
+                print("SUCCESS: Lineage blueprint file has been successfully patched!")
+            else:
+                print("WARNING: Blueprint file found, but target strings were not present.")
+        else:
+            print("ERROR: Target Lineage blueprint file was not found at expected path.")
+        '
 
     - name: Compile Boot Image Only
       run: |
@@ -101,7 +126,6 @@ jobs:
         source build/envsetup.sh
         lunch halium_T482L-userdebug
         export USE_HOST_LEX=yes
-        # Only building hybris-boot target here!
         mka hybris-boot
 
     - name: Upload Finished Boot Image File
